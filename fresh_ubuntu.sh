@@ -61,6 +61,18 @@ apt install -y flatpak gnome-software-plugin-flatpak
 apt install -y stacer
 apt install -y htop
 apt install -y libreoffice
+apt install -y python3-pip
+apt-get install python3-virtualenv
+git config --global init.defaultBranch main
+git clone https://github.com/Tudmotu/gnome-shell-extension-clipboard-indicator.git ~/.local/share/gnome-shell/extensions/
+curl -sS https://download.spotify.com/debian/pubkey_C85668DF69375001.gpg | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg
+echo "deb https://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list
+apt-get update && sudo apt-get install spotify-client
+apt install -y tldr
+apt install -y traceroute
+apt install -y tmux
+apt install -y cmatrix
+apt install -y gh
 
 # Install Flatpak and configure Flathub repository
 echo_status "Setting up Flatpak..."
@@ -69,7 +81,6 @@ flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flat
 # Install flatpak applications
 echo_status "Installing Flatpak applications..."
 su - "$REAL_USER" -c "flatpak install -y flathub com.discordapp.Discord" || echo_status "Failed to install Discord"
-su - "$REAL_USER" -c "flatpak install -y flathub com.spotify.Client" || echo_status "Failed to install Spotify"
 su - "$REAL_USER" -c "flatpak install -y flathub com.prusa3d.PrusaSlicer" || echo_status "Failed to install PrusaSlicer"
 
 # SHELL SETUP
@@ -105,7 +116,7 @@ else
     echo_status "Failed to change default shell to ZSH"
 fi
 
-# Desktop settings
+# GNOME Desktop settings
 echo_status "Setting up desktop environment..."
 # Check if running in a GNOME session
 if pgrep -f "gnome-shell" > /dev/null; then
@@ -132,29 +143,6 @@ if [ "$(echo "$UBUNTU_VERSION >= 22.04" | bc)" -eq 1 ]; then
 else
     echo "Installing chrome-gnome-shell for Ubuntu $UBUNTU_VERSION..."
     apt install -y chrome-gnome-shell || echo_status "Failed to install chrome-gnome-shell"
-fi
-
-# Install Dash to Dock
-apt install -y gnome-shell-extension-dash-to-dock && \
-    echo "Dash to Dock installed successfully" || \
-    echo_status "Could not install Dash to Dock. May need to be installed manually."
-
-# Enable Dash to Dock extension for the real user
-if pgrep -f "gnome-shell" > /dev/null; then
-    # Check which Dash to Dock extension ID is available
-    if su - "$REAL_USER" -c "gnome-extensions list | grep -q 'dash-to-dock@micxgx.gmail.com'"; then
-        su - "$REAL_USER" -c "gnome-extensions enable dash-to-dock@micxgx.gmail.com" && \
-            echo "Dash to Dock extension enabled" || \
-            echo_status "Could not enable Dash to Dock automatically. Please enable it manually."
-    elif su - "$REAL_USER" -c "gnome-extensions list | grep -q 'ubuntu-dock@ubuntu.com'"; then
-        su - "$REAL_USER" -c "gnome-extensions enable ubuntu-dock@ubuntu.com" && \
-            echo "Ubuntu Dock extension enabled" || \
-            echo_status "Could not enable Ubuntu Dock automatically. Please enable it manually."
-    else
-        echo_status "No compatible dock extension found. Please install and enable manually."
-    fi
-else
-    echo_status "GNOME Shell not running, skipping extension enabling"
 fi
 
 # Final cleanup
