@@ -34,7 +34,6 @@ apt update
 
 # CLEANUP UNWANTED APPS
 echo_status "Removing unnecessary applications..."
-apt remove --purge -y yelp gnome-text-editor || true
 apt remove --purge -y gnome-passwordsafe || true
 apt autoremove -y
 apt install -y zsh
