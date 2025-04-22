@@ -65,5 +65,3 @@ Enjoy your fresh Ubuntu setup! 🎉
 - mógłby ustawiać kolory terminala na green on black
 - pobierać czczcionkę jetbrains mono
 - ustawiać ją jako domyślną w terminalu
-- nie usunął passwords and keys
-- nie ustawia name i email na gicie
