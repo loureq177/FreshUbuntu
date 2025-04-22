@@ -18,14 +18,10 @@ A Bash script to set up a fresh Ubuntu 22.04 LTS environment with essential appl
 
 ## Usage 🛠️
 
-1. Make the script executable:
+Make the script executable and run the script:
    ```bash
-   chmod +x FreshUbuntu.sh
-   ```
-
-2. Run the script:
-   ```bash
-   ./FreshUbuntu.sh
+   chmod +x fresh_ubuntu.sh
+   sudo ./fresh_ubuntu.sh
    ```
 
 ## Post-Installation Steps 📋
@@ -58,4 +54,16 @@ A Bash script to set up a fresh Ubuntu 22.04 LTS environment with essential appl
 - Some applications may need manual configuration.
 
 Enjoy your fresh Ubuntu setup! 🎉
-
+   chmod +x fresh_ubuntu.sh
+   ./fresh_ubuntu.sh
+   
+## czego jeszcze skrypt nie robi?
+- zmiana ustawień z poziomu terminala w ogóle nie działa
+- odinstalowuje niepotrzebnie thunderbird
+- nie zainstalował żadnego extension
+- mógłby usuwać z paska zadań libre office writer, app center i help
+- mógłby ustawiać kolory terminala na green on black
+- pobierać czczcionkę jetbrains mono
+- ustawiać ją jako domyślną w terminalu
+- nie usunął passwords and keys
+- nie ustawia name i email na gicie

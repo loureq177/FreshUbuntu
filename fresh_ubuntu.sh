@@ -32,10 +32,6 @@ add-apt-repository multiverse -y
 dpkg --add-architecture i386
 apt update
 
-# CLEANUP UNWANTED APPS
-echo_status "Removing unnecessary applications..."
-apt remove --purge -y gnome-passwordsafe || true
-apt autoremove -y
 apt install -y zsh
 apt install -y neovim
 # Add error handling for VS Code download
@@ -53,7 +49,7 @@ else
     exit 1
 fi
 apt install -y git
-
+apt install -y neofetch
 apt install -y gimp
 apt install -y steam
 apt install -y flatpak gnome-software-plugin-flatpak
@@ -62,7 +58,7 @@ apt install -y htop
 apt install -y libreoffice
 apt install -y python3-pip
 apt-get install python3-virtualenv
-git config --global init.defaultBranch main
+
 git clone https://github.com/Tudmotu/gnome-shell-extension-clipboard-indicator.git ~/.local/share/gnome-shell/extensions/
 curl -sS https://download.spotify.com/debian/pubkey_C85668DF69375001.gpg | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg
 echo "deb https://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list
@@ -72,6 +68,11 @@ apt install -y traceroute
 apt install -y tmux
 apt install -y cmatrix
 apt install -y gh
+
+## Configure git 
+git config --global init.defaultBranch main
+git config --global user.name mlorenc
+git config --global user.email 142215274+loureq177@users.noreply.github.com
 
 # Install Flatpak and configure Flathub repository
 echo_status "Setting up Flatpak..."
@@ -130,7 +131,7 @@ else
     echo_status "GNOME Shell not detected, skipping desktop settings"
 fi
 
-# Install Extension Manager and Dash to Dock
+# Install Extension Manager and Gnome-tweaks
 echo_status "Installing GNOME extensions..."
 apt install -y gnome-shell-extensions gnome-tweaks
 
