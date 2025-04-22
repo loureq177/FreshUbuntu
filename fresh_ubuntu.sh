@@ -145,6 +145,7 @@ else
     apt install -y chrome-gnome-shell || echo_status "Failed to install chrome-gnome-shell"
 fi
 
+
 # Final cleanup
 echo_status "Performing final cleanup..."
 echo "Updating packages..."
@@ -153,6 +154,9 @@ echo "Removing unnecessary packages..."
 apt autoremove -y && apt autoclean -y && apt clean -y
 echo "Cleaning temporary files..."
 rm -rf /tmp/*
+
+# Update drivers
+ubuntu-drivers autoinstall
 
 echo_status "Installation completed! Please log out and log back in for all changes to take effect."
 echo "You may need to restart your computer for all changes to take effect."
