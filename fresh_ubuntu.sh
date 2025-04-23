@@ -48,26 +48,33 @@ else
     echo_status "VS Code installation file not found"
     exit 1
 fi
-apt install -y git
-apt install -y neofetch
-apt install -y gimp
-apt install -y steam
+
+apt install -y cmatrix
 apt install -y flatpak gnome-software-plugin-flatpak
-apt install -y stacer
+apt install -y gimp
+apt install -y gh
+apt install -y git
 apt install -y htop
+apt install -y neofetch
+apt install -y stacer
+apt install -y steam
 apt install -y libreoffice
 apt install -y python3-pip
-apt-get install python3-virtualenv
-
-git clone https://github.com/Tudmotu/gnome-shell-extension-clipboard-indicator.git ~/.local/share/gnome-shell/extensions/
-curl -sS https://download.spotify.com/debian/pubkey_C85668DF69375001.gpg | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg
-echo "deb https://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list
-apt-get update && sudo apt-get install spotify-client
 apt install -y tldr
-apt install -y traceroute
 apt install -y tmux
-apt install -y cmatrix
-apt install -y gh
+apt install -y traceroute
+
+apt-get install -y python3-virtualenv
+curl -fsSL https://ollama.com/install.sh | sh
+
+mkdir -p "$REAL_USER_HOME/.local/share/gnome-shell/extensions/"
+git clone https://github.com/Tudmotu/gnome-shell-extension-clipboard-indicator.git "$REAL_USER_HOME/.local/share/gnome-shell/extensions/clipboard-indicator@tudmotu.com"
+chown -R "$REAL_USER":"$REAL_USER" "$REAL_USER_HOME/.local/share/gnome-shell/extensions/"
+
+curl -sS https://download.spotify.com/debian/pubkey_C85668DF69375001.gpg | gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg
+echo "deb https://repository.spotify.com stable non-free" | tee /etc/apt/sources.list.d/spotify.list
+apt-get update && apt-get install spotify-client
+
 
 ## Configure git 
 git config --global init.defaultBranch main
