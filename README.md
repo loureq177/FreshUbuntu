@@ -57,11 +57,51 @@ Enjoy your fresh Ubuntu setup! 🎉
    chmod +x fresh_ubuntu.sh
    ./fresh_ubuntu.sh
    
-## czego jeszcze skrypt nie robi?
-- zmiana ustawień z poziomu terminala w ogóle nie działa
-- odinstalowuje niepotrzebnie thunderbird
-- nie zainstalował żadnego extension
-- mógłby usuwać z paska zadań libre office writer, app center i help
-- mógłby ustawiać kolory terminala na green on black
-- pobierać czczcionkę jetbrains mono
-- ustawiać ją jako domyślną w terminalu
+    
+## To Do
+- fix_battery_health_wayland()
+- fprintd enroll
+- pam-auth-update
+- usuwać z paska zadań libre office writer, app center i help
+- ustawiać JetBrains Mono jako domyślna w Monospace Text
+- odświeżanie na 74Hz
+- mikrofon na 40% volume
+- fn keys w lofree
+- ustawiać automatycznie ikonkę na jakąś wybraną (będzie w katalogu skryptu)
+- przepisać to zgodnie z design patterns
+- preferences w terminalu
+    - transparency: true (40%)
+    - show scrollbar: false
+    - use colors from system theme: false
+    - built-in schemes: green on black
+    - initial terminal size: 130 x 30
+- złączyć ten fragment:
+#!/bin/bash
+
+set -e
+
+# Ścieżka instalacji czcionek lokalnie
+FONT_DIR="$HOME/.local/share/fonts"
+
+# Tymczasowy katalog
+TMP_DIR=$(mktemp -d)
+
+echo "📥 Pobieranie JetBrains Mono..."
+wget -qO "$TMP_DIR/jetbrains-mono.zip" https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip
+
+echo "📦 Wypakowywanie..."
+unzip -q "$TMP_DIR/jetbrains-mono.zip" -d "$TMP_DIR"
+
+echo "📁 Instalacja czcionek do $FONT_DIR"
+mkdir -p "$FONT_DIR"
+cp "$TMP_DIR/fonts/ttf/"*.ttf "$FONT_DIR"
+
+echo "🔄 Odświeżanie cache czcionek..."
+fc-cache -f "$FONT_DIR"
+
+echo "✅ JetBrains Mono zainstalowana!"
+echo "⚙️ Ustaw ją ręcznie jako czcionkę w swoim emulatorze terminala."
+
+# Sprzątanie
+rm -rf "$TMP_DIR"
+

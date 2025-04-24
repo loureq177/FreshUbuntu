@@ -87,8 +87,8 @@ flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flat
 
 # Install flatpak applications
 echo_status "Installing Flatpak applications..."
-su - "$REAL_USER" -c "flatpak install -y flathub com.discordapp.Discord" || echo_status "Failed to install Discord"
-su - "$REAL_USER" -c "flatpak install -y flathub com.prusa3d.PrusaSlicer" || echo_status "Failed to install PrusaSlicer"
+flatpak install -y app/com.discordapp.Discord/x86_64/stable
+flatpak install -y flathub com.prusa3d.PrusaSlicer" || echo_status "Failed to install PrusaSlicer
 
 # SHELL SETUP
 echo_status "Setting up ZSH..."
