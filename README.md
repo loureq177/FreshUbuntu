@@ -62,6 +62,13 @@ Enjoy your fresh Ubuntu setup! 🎉
 - zrobić podział na małe funkcje i małe moduły
 - dodać funkcję `print_streamed()` w miejscu echo
 - dodawanie klucza SSH z `GitHub Secrets`
+```bash
+ssh-keygen -t ed25519
+print_streamed("Your new SSH key is:")
+cat ~/.ssh/id_ed25519.pub
+print_streamed("Don't forget to add it to your GitHub account")
+sleep 2
+```
 - wywoływać `fix_battery_health_wayland()`
 - `fprintd enroll`
 - `pam-auth-update`
@@ -108,3 +115,4 @@ echo "⚙️ Ustaw ją ręcznie jako czcionkę w swoim emulatorze terminala."
 # Sprzątanie
 rm -rf "$TMP_DIR"
 ```
+
