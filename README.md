@@ -59,16 +59,18 @@ Enjoy your fresh Ubuntu setup! 🎉
    
     
 ## To Do
-- fix_battery_health_wayland()
-- fprintd enroll
-- pam-auth-update
+- zrobić podział na małe funkcje i małe moduły
+- dodać funkcję `print_streamed()` w miejscu echo
+- dodawanie klucza SSH z `GitHub Secrets`
+- wywoływać `fix_battery_health_wayland()`
+- `fprintd enroll`
+- `pam-auth-update`
 - usuwać z paska zadań libre office writer, app center i help
-- ustawiać JetBrains Mono jako domyślna w Monospace Text
+- ustawiać `JetBrains Mono` jako domyślna w Monospace Text
 - odświeżanie na 74Hz
 - mikrofon na 40% volume
 - fn keys w lofree
 - ustawiać automatycznie ikonkę na jakąś wybraną (będzie w katalogu skryptu)
-- przepisać to zgodnie z design patterns
 - preferences w terminalu
     - transparency: true (40%)
     - show scrollbar: false
@@ -76,6 +78,7 @@ Enjoy your fresh Ubuntu setup! 🎉
     - built-in schemes: green on black
     - initial terminal size: 130 x 30
 - złączyć ten fragment:
+```bash
 #!/bin/bash
 
 set -e
@@ -104,4 +107,4 @@ echo "⚙️ Ustaw ją ręcznie jako czcionkę w swoim emulatorze terminala."
 
 # Sprzątanie
 rm -rf "$TMP_DIR"
-
+```
