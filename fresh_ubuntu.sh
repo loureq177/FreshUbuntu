@@ -64,6 +64,7 @@ apt install -y tldr
 apt install -y tmux
 apt install -y traceroute
 apt install -y docker.io
+usermod -aG docker $USER
 systemctl enable docker
 systemctl start docker
 
