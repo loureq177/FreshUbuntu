@@ -63,6 +63,9 @@ apt install -y python3-pip
 apt install -y tldr
 apt install -y tmux
 apt install -y traceroute
+apt install -y docker.io
+systemctl enable docker
+systemctl start docker
 
 apt-get install -y python3-virtualenv
 curl -fsSL https://ollama.com/install.sh | sh
