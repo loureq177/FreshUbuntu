@@ -34,7 +34,8 @@ apt update
 
 apt install -y zsh
 apt install -y neovim
-# Add error handling for VS Code download
+
+# VS Code download
 if ! wget https://go.microsoft.com/fwlink/?LinkID=760868 -O vscode.deb; then
     echo_status "Failed to download VS Code"
     exit 1
@@ -42,7 +43,6 @@ fi
 # Check if file exists before installing
 if [ -f ./vscode.deb ]; then
     apt install -y ./vscode.deb
-    # Clean up the downloaded file
     rm -f ./vscode.deb
 else
     echo_status "VS Code installation file not found"
