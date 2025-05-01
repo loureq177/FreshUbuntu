@@ -94,7 +94,8 @@ echo_status "Installing Flatpak applications..."
 flatpak install -y app/com.discordapp.Discord/x86_64/stable
 flatpak install -y flathub com.prusa3d.PrusaSlicer" || echo_status "Failed to install PrusaSlicer
 flatpak install -y flathub org.gnome.Snapshot
-flatpak install flathub org.gnome.Boxes
+flatpak install -y flathub org.gnome.Boxes
+flatpak install -y flathub io.dbeaver.DBeaverCommunity
 
 # SHELL SETUP
 echo_status "Setting up ZSH..."
