@@ -159,6 +159,12 @@ else
     apt install -y chrome-gnome-shell || echo_status "Failed to install chrome-gnome-shell"
 fi
 
+# OPTIONAL
+# Fix lofree keyboard
+# echo 2 | sudo tee /sys/module/hid_apple/parameters/fnmode
+# sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="hid_apple.fnmode=2 /' /etc/default/grub
+
+
 
 # Final cleanup
 echo_status "Performing final cleanup..."
