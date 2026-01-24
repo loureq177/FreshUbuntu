@@ -77,10 +77,11 @@ fi
 log_info "Configuring GNOME environment..."
 log_info "Applying GNOME preferences..."
 gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark' || log_warn "GTK theme failed"
+gsettings set org.gnome.desktop.interface icon-theme "Adwaita"
 gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' || log_warn "Color scheme failed"
 gsettings set org.gnome.desktop.interface font-name 'Adwaita Sans 12'
 gsettings set org.gnome.desktop.interface document-font-name 'Adwaita Sans 12'
-gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrainsMono Nerd Font Mono 16' \
+gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrainsMono Nerd Font Mono 14' \
   && log_ok "Default monospace font set to JetBrainsMono Nerd Font Mono." \
   || log_warn "Failed to set JetBrains Mono Nerd Font as default."
 gsettings set org.gnome.desktop.interface text-scaling-factor 1.10
@@ -91,6 +92,10 @@ gsettings set org.gnome.desktop.input-sources xkb-options "['caps:escape']"
 gsettings set org.gnome.desktop.interface clock-format '24h'
 gsettings set org.gnome.desktop.peripherals.keyboard delay 200
 log_ok "GNOME settings applied."
+ 
+# =====================[ GNOME EXTENSIONS ]===================== #
+gnome-extensions disable ubuntu-dock@ubuntu.com
+gnome-extensions disable ding@rastersoft.com
 
 # =====================[ AUDIO ]===================== #
 log_info "Setting microphone volume..."
