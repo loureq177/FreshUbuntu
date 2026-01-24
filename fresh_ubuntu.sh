@@ -1,182 +1,316 @@
-#!/bin/bash
+#! /usr/bin/env bash
+set -euo pipefail
 
-# Ensure the script is run as root
-if [ "$EUID" -ne 0 ]; then 
-    echo "Please run as root (use sudo)"
-    exit 1
+# =====================[ USER CHECK ]===================== #
+if [ "$EUID" -eq 0 ]; then
+  echo -e "\033[0;31m[ERROR] Please run as normal user (DO NOT USE SUDO to start script)"
+  exit 1
 fi
 
-# Error handling and logging
-set -e
-exec > >(tee "_installation_log.txt") 2>&1
+sudo -v
+while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
-# Function to display status messages
-echo_status() {
-    echo "-------------------------------------------"
-    echo "$1"
-    echo "-------------------------------------------"
-}
+# =====================[ COLORS & LOGGING ]===================== #
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
-# Determine real user
-REAL_USER=${SUDO_USER:-$(logname || who -m | awk '{print $1}')}
-REAL_USER_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
-echo_status "Detected user: $REAL_USER with home: $REAL_USER_HOME"
+LOG_FILE="/tmp/ubuntu-setup.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
 
-# SYSTEM SETUP & UPDATES
-echo_status "Setting up system..."
-ufw enable || echo_status "Firewall already enabled"
-apt update && apt upgrade -y
-# Install essential tools
-apt-get install -y dbus-x11 curl || true
-add-apt-repository multiverse -y
-dpkg --add-architecture i386
-apt update
+log_info()  { echo -e "${BLUE}[INFO]${NC}  $*"; sleep 2; }
+log_ok()    { echo -e "${GREEN}[OK]${NC}    $*"; sleep 2; }
+log_warn()  { echo -e "${YELLOW}[WARN]${NC}  $*"; sleep 2; }
+log_error() { echo -e "${RED}[ERROR]${NC} $*"; sleep 2; }
 
-apt install -y zsh
-apt install -y neovim
+log_info "Running setup for user: $USER"
+log_info "Home directory: $HOME"
 
-# VS Code download
-if ! wget https://go.microsoft.com/fwlink/?LinkID=760868 -O vscode.deb; then
-    echo_status "Failed to download VS Code"
-    exit 1
-fi
-# Check if file exists before installing
-if [ -f ./vscode.deb ]; then
-    apt install -y ./vscode.deb
-    rm -f ./vscode.deb
-else
-    echo_status "VS Code installation file not found"
-    exit 1
-fi
-
-apt install -y cmatrix
-apt install -y flatpak gnome-software-plugin-flatpak
-apt install -y gimp
-apt install -y gh
-apt install -y git
-apt install -y htop
-apt install -y neofetch
-apt install -y stacer
-apt install -y steam
-apt install -y libreoffice
-apt install -y python3-pip
-apt install -y tldr
-apt install -y tmux
-apt install -y traceroute
-apt install -y docker.io
-usermod -aG docker $USER
-systemctl enable docker
-systemctl start docker
-
-apt-get install -y python3-virtualenv
-curl -fsSL https://ollama.com/install.sh | sh
-
-mkdir -p "$REAL_USER_HOME/.local/share/gnome-shell/extensions/"
-git clone https://github.com/Tudmotu/gnome-shell-extension-clipboard-indicator.git "$REAL_USER_HOME/.local/share/gnome-shell/extensions/clipboard-indicator@tudmotu.com"
-chown -R "$REAL_USER":"$REAL_USER" "$REAL_USER_HOME/.local/share/gnome-shell/extensions/"
-
-curl -sS https://download.spotify.com/debian/pubkey_C85668DF69375001.gpg | gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg
-echo "deb https://repository.spotify.com stable non-free" | tee /etc/apt/sources.list.d/spotify.list
-apt-get update && apt-get install spotify-client
-
-
-## Configure git 
+# =====================[ GIT SETUP ]=================== #
+log_info "Setting up git..."
 git config --global init.defaultBranch main
-git config --global user.name mlorenc
-git config --global user.email 142215274+loureq177@users.noreply.github.com
+CURRENT_NAME=$(git config --global --get user.name || true)
+CURRENT_EMAIL=$(git config --global --get user.email || true)
+if [[ -n "$CURRENT_NAME" ]] && [[ -n "$CURRENT_EMAIL" ]]; then
+  log_info "Git is already configured as: $CURRENT_NAME <$CURRENT_EMAIL> — skipping setup."
+else
+  if [[ -z "$CURRENT_NAME" ]]; then
+    read -p "Enter your nick for git config --global user.name: " username
+    git config --global user.name "$username"
+  fi
 
-# Install Flatpak and configure Flathub repository
-echo_status "Setting up Flatpak..."
+  if [[ -z "$CURRENT_EMAIL" ]]; then
+    read -p "Enter your email for git config --global user.email: " email
+    git config --global user.email "$email"
+  fi
+
+  log_ok "Git has been correctly set up."
+fi
+ 
+# =========================[ DRIVER UPDATE ]========================= #
+log_info "Updating drivers..."
+sudo fwupdmgr refresh --force || true
+sudo fwupdmgr get-updates || true
+sudo fwupdmgr update --assume-yes || true
+log_ok "Drivers updated check complete!"
+
+# =====================[ JETBRAINS MONO NERD FONT ]===================== #
+log_info "Installing JetBrains Mono Nerd Font..."
+
+FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
+FONT_DIR="/usr/share/fonts/JetBrainsMonoNerd"
+
+if [ ! -d "$FONT_DIR" ]; then
+  sudo mkdir -p "$FONT_DIR"
+  curl -fLo /tmp/JetBrainsMono.zip "$FONT_URL" \
+    && sudo unzip -qo /tmp/JetBrainsMono.zip -d "$FONT_DIR" \
+    && sudo fc-cache -f -v \
+    && log_ok "JetBrains Mono Nerd Font installed." \
+    || log_warn "Failed to install JetBrains Mono Nerd Font."
+else
+  log_info "JetBrains Mono Nerd Font already installed — skipping."
+fi
+
+# =====================[ GNOME CONFIGURATION ]===================== #
+log_info "Configuring GNOME environment..."
+log_info "Applying GNOME preferences..."
+gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark' || log_warn "GTK theme failed"
+gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' || log_warn "Color scheme failed"
+gsettings set org.gnome.desktop.interface font-name 'Adwaita Sans 12'
+gsettings set org.gnome.desktop.interface document-font-name 'Adwaita Sans 12'
+gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrainsMono Nerd Font Mono 16' \
+  && log_ok "Default monospace font set to JetBrainsMono Nerd Font Mono." \
+  || log_warn "Failed to set JetBrains Mono Nerd Font as default."
+gsettings set org.gnome.desktop.interface text-scaling-factor 1.10
+gsettings set org.gnome.desktop.wm.preferences button-layout 'appmenu:minimize,maximize,close'
+gsettings set org.gnome.desktop.interface show-battery-percentage true
+gsettings set org.gnome.desktop.wm.preferences auto-raise true
+gsettings set org.gnome.desktop.input-sources xkb-options "['caps:escape']"
+gsettings set org.gnome.desktop.interface clock-format '24h'
+gsettings set org.gnome.desktop.peripherals.keyboard delay 200
+log_ok "GNOME settings applied."
+
+# =====================[ AUDIO ]===================== #
+log_info "Setting microphone volume..."
+wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 0.3 && log_ok "Microphone set to 30%" || log_warn "Could not set volume"
+
+# =====================[ ADD REPOSITORIES ]===================== #
+sudo add-apt-repository -y multiverse
+sudo add-apt-repository -y universe
+
+# =====================[ DOCKER ]===================== #
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+# =====================[ EZA ]===================== #
+log_info "Configuring Eza repository..."
+sudo mkdir -p /etc/apt/keyrings
+wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor --batch --yes -o /etc/apt/keyrings/gierens.gpg
+echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
+sudo chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
+
+# =====================[ GO ]===================== #
+sudo add-apt-repository -y ppa:longsleep/golang-backports
+
+# =====================[ VS CODE ]===================== #
+log_info "Configuring Visual Studio Code repository..."
+sudo rm -f /etc/apt/sources.list.d/vscode.list /etc/apt/keyrings/vscode.gpg
+wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/vscode.gpg > /dev/null
+echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/vscode.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list
+
+# =====================[ UPDATE ]===================== #
+sudo apt update -y
+
+# =====================[ REMOVE APT PACKAGES ]===================== #
+log_info "Removing unnecessary applications..."
+sudo apt remove -y \
+firefox \
+orca \
+yelp
+log_ok "Unnecessary applications removed."
+
+# =====================[ UPDATE APT PACKAGES ]===================== #
+log_info "Updating system..."
+sudo apt update && sudo apt upgrade -y
+log_ok "System up to date."
+
+# =====================[ INSTALL APT PACKAGES ]===================== #
+sudo apt install -y \
+  bat \
+  btop \
+  ca-certificates \
+  cargo \
+  cbonsai \
+  cmatrix \
+  code \
+  containerd.io \
+  curl \
+  docker-buildx-plugin \
+  docker-ce \
+  docker-ce-cli \
+  docker-compose-plugin \
+  eza \
+  fastfetch \
+  flatpak \
+  fzf \
+  gcc \
+  gnome-software-plugin-flatpak \
+  gnome-shell-extensions \
+  gnome-tweaks \
+  gh \
+  git \
+  git-lfs \
+  neovim \
+  python3-pip \
+  python3-virtualenv \
+  rclone \
+  rclone-browser \
+  sox \
+  stacer \
+  stow \
+  tealdeer \
+  tmux \
+  traceroute \
+  wl-clipboard \
+  zsh \
+  zsh-autosuggestions \
+  zsh-syntax-highlighting
+log_ok "Essential applications installed."
+
+# =====================[ INSTALL OLLAMA ]===================== #
+log_info "Checking for Ollama..."
+if command -v ollama &> /dev/null; then
+    log_info "Ollama is already installed — skipping."
+else
+    log_info "Ollama not found. Starting installation..."
+    curl -fsSL https://ollama.com/install.sh | sh
+    log_ok "Ollama installed successfully."
+fi
+
+# =====================[ FLATPAK SETUP ]===================== #
+log_info "Setting up Flatpak repository..."
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+log_ok "Flathub repository ready."
+flatpak_apps=(
+  app.zen_browser.zen \
+  com.discordapp.Discord/x86_64/stable \
+  com.github.PintaProject.Pinta \
+  com.mattjakeman.ExtensionManager \
+  com.prusa3d.PrusaSlicer \
+  com.spotify.Client \
+  com.valvesoftware.Steam \
+  io.dbeaver.DBeaverCommunity \
+  md.obsidian.Obsidian \
+  org.gnome.Snapshot \
+  org.gnome.Boxes
+)
+log_info "Installing Flatpak applications (batch mode)..."
+flatpak install \
+	-y \
+	--system \
+	--non-interactive \
+	flathub "${flatpak_apps[@]}" \
+  && log_ok "All Flatpak applications installed successfully." \
+  || log_warn "There were issues installing some Flatpak applications."
 
-# Install flatpak applications
-echo_status "Installing Flatpak applications..."
-flatpak install -y app/com.discordapp.Discord/x86_64/stable
-flatpak install -y flathub com.prusa3d.PrusaSlicer" || echo_status "Failed to install PrusaSlicer
-flatpak install -y flathub org.gnome.Snapshot
-flatpak install -y flathub org.gnome.Boxes
-flatpak install -y flathub io.dbeaver.DBeaverCommunity
 
-# SHELL SETUP
-echo_status "Setting up ZSH..."
-if [ ! -d "$REAL_USER_HOME/.oh-my-zsh" ]; then
-    git clone --quiet https://github.com/ohmyzsh/ohmyzsh.git "$REAL_USER_HOME/.oh-my-zsh"
-    chown -R "$REAL_USER":"$REAL_USER" "$REAL_USER_HOME/.oh-my-zsh"
-fi
+# =====================[ ENABLE FIREWALL ]===================== #
+sudo ufw --force enable
 
-# Create .zshrc
-if [ -f "$REAL_USER_HOME/.zshrc" ]; then
-    mv "$REAL_USER_HOME/.zshrc" "$REAL_USER_HOME/.zshrc.backup.$(date +%Y%m%d%H%M%S)"
-fi
-
-cat > "$REAL_USER_HOME/.zshrc" << EOL
-# Path to your oh-my-zsh installation.
-export ZSH="$REAL_USER_HOME/.oh-my-zsh"
-ZSH_THEME="robbyrussell"
-plugins=(git)
-source \$ZSH/oh-my-zsh.sh
-export LANG=en_US.UTF-8
-export EDITOR='vim'
-EOL
-chown "$REAL_USER":"$REAL_USER" "$REAL_USER_HOME/.zshrc"
-
-# Set ZSH as default shell
-echo_status "Setting ZSH as default shell..."
-if chsh -s $(which zsh) "$REAL_USER"; then
-    echo "Default shell changed to ZSH successfully"
-elif usermod -s $(which zsh) "$REAL_USER"; then
-    echo "Default shell changed to ZSH using usermod"
+# =====================[ FIX LOFREE KEYBOARD ]===================== #
+log_info "Fixing Lofree keyboard (Function keys)..."
+sudo modprobe hid_apple
+if [ -d "/sys/module/hid_apple/parameters" ]; then
+    echo 2 | sudo tee /sys/module/hid_apple/parameters/fnmode > /dev/null
+    log_ok "hid_apple module configured."
 else
-    echo_status "Failed to change default shell to ZSH"
+    log_warn "hid_apple module not found. Is the keyboard connected?"
 fi
+sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="hid_apple.fnmode=2 /' /etc/default/grub
+sudo update-grub
 
-# GNOME Desktop settings
-echo_status "Setting up desktop environment..."
-# Check if running in a GNOME session
-if pgrep -f "gnome-shell" > /dev/null; then
-    echo "Configuring GNOME desktop settings..."
-    su - "$REAL_USER" -c "gsettings set org.gnome.desktop.interface show-battery-percentage true" && \
-        echo "Set battery percentage display: ON" || echo_status "Failed to set battery percentage display"
-    su - "$REAL_USER" -c "gsettings set org.gnome.nautilus.desktop home-icon-visible false" && \
-        echo "Set home icon visibility: OFF" || echo_status "Failed to set home icon visibility"
-    su - "$REAL_USER" -c "gsettings set org.gnome.desktop.interface text-scaling-factor 1.2" && \
-        echo "Set text scaling factor to 1.2" || echo_status "Failed to set text scaling factor"
+# =====================[ UV INSTALLER ]===================== #
+log_info "Installing uv for Python..."
+if command -v uv &> /dev/null; then
+    log_info "uv already installed — skipping."
 else
-    echo_status "GNOME Shell not detected, skipping desktop settings"
+    log_info "Installing uv..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
 fi
 
-# Install Extension Manager and Gnome-tweaks
-echo_status "Installing GNOME extensions..."
-apt install -y gnome-shell-extensions gnome-tweaks
+# =====================[ STARSHIP PROMPT ]===================== #
+log_info "Installing Starship Prompt..."
 
-# For Ubuntu 22.04+, use Extension Manager instead of chrome-gnome-shell
-UBUNTU_VERSION=$(lsb_release -rs)
-if [ "$(echo "$UBUNTU_VERSION >= 22.04" | bc)" -eq 1 ]; then
-    echo "Installing Extension Manager for Ubuntu $UBUNTU_VERSION..."
-    apt install -y gnome-shell-extension-manager || echo_status "Failed to install Extension Manager"
+if ! command -v starship &>/dev/null; then
+  curl -sS https://starship.rs/install.sh | sh -s -- -y
+  log_ok "Starship binary installed."
 else
-    echo "Installing chrome-gnome-shell for Ubuntu $UBUNTU_VERSION..."
-    apt install -y chrome-gnome-shell || echo_status "Failed to install chrome-gnome-shell"
+  log_info "Starship already installed — skipping binary download."
+fi
+STARSHIP_INIT='eval "$(starship init zsh)"'
+if ! grep -qF "$STARSHIP_INIT" "$HOME/.zshrc"; then
+  echo "" >> "$HOME/.zshrc"
+  echo "$STARSHIP_INIT" >> "$HOME/.zshrc"
+  log_ok "Added Starship init to .zshrc"
+else
+  log_info "Starship already configured in .zshrc — skipping."
 fi
 
-# OPTIONAL
-# Fix lofree keyboard
-# echo 2 | sudo tee /sys/module/hid_apple/parameters/fnmode
-# sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="hid_apple.fnmode=2 /' /etc/default/grub
+# =====================[ SET ZSH AS DEFAULT ]===================== #
+log_info "Setting ZSH as default shell..."
+if [ "$SHELL" != "$(which zsh)" ]; then
+    sudo chsh -s "$(which zsh)" "$USER"
+    log_ok "Shell changed to ZSH. It will take effect after logout/login."
+else
+    log_info "ZSH is already your default shell."
+fi
 
+# =====================[ MOUNTING EXTERNAL HOME ]===================== #
+log_info "Configuring 512 GB drive as /home"
+HOME_UUID="688f55cd-90c1-4766-b4f9-5e1a812fe16a"
+log_info "Cleaning old /home entries from /etc/fstab..."
+sudo sed -i '/[[:space:]]\/home[[:space:]]/d' /etc/fstab
+log_info "Adding correct entry for 512GB drive..."
+echo "UUID=$HOME_UUID /home ext4 defaults 0 2" | sudo tee -a /etc/fstab > /dev/null
+log_info "Reloading systemd and mounting..."
+sudo systemctl daemon-reload
+sudo umount -R /home 2>/dev/null || true
+sudo mount -a
+log_info "Fixing permissions for user: $USER"
+sudo chown -R "$USER:$(id -gn "$USER")" "/home/$USER"
+sudo chmod 700 "/home/$USER"
+log_ok "512 GB Drive mounted via fstab. Reboot safe."
 
+# =====================[ CLEANUP ]===================== #
+log_info "Cleaning up..."
+sudo apt autoremove -y
+sudo apt autoclean -y
+sudo apt clean -y
+log_ok "System cleanup complete."
 
-# Final cleanup
-echo_status "Performing final cleanup..."
-echo "Updating packages..."
-apt update && apt upgrade -y
-echo "Removing unnecessary packages..."
-apt autoremove -y && apt autoclean -y && apt clean -y
-echo "Cleaning temporary files..."
-rm -rf /tmp/*
+# =====================[ FINISH ]===================== #
+echo ""
+echo ""
+echo -e "${GREEN}========================================${NC}"
+echo -e "${GREEN} INSTALLATION COMPLETED SUCCESSFULLY!${NC}"
+echo -e "${GREEN}========================================${NC}"
+echo ""
+echo "Logs saved to: $LOG_FILE"
+echo ""
+echo "Reboot your system for NVIDIA drivers to load properly."
 
-# Update drivers
-ubuntu-drivers autoinstall
-
-echo_status "Installation completed! Please log out and log back in for all changes to take effect."
-echo "You may need to restart your computer for all changes to take effect."
+# todo
+# extensions
+# brew
+# brew apps
+# group install
