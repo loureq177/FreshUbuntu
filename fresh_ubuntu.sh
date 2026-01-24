@@ -182,10 +182,19 @@ sudo apt install -y \
   tmux \
   traceroute \
   wl-clipboard \
+  zoxide \
   zsh \
   zsh-autosuggestions \
   zsh-syntax-highlighting
 log_ok "Essential applications installed."
+
+# =====================[ BAT FIX ]===================== #
+ln -sf /usr/bin/batcat ~/.local/bin/batcat
+
+# =====================[ BROWSER & SHELL SETUP ]===================== #
+log_info "Setting Zen Browser as default..."
+xdg-settings set default-web-browser app.zen_browser.zen.desktop
+log_ok "Zen Browser set as default."
 
 # =====================[ INSTALL OLLAMA ]===================== #
 log_info "Checking for Ollama..."
@@ -218,7 +227,6 @@ log_info "Installing Flatpak applications (batch mode)..."
 flatpak install \
 	-y \
 	--system \
-	--non-interactive \
 	flathub "${flatpak_apps[@]}" \
   && log_ok "All Flatpak applications installed successfully." \
   || log_warn "There were issues installing some Flatpak applications."
