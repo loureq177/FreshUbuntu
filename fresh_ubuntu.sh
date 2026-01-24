@@ -276,20 +276,18 @@ else
 fi
 
 # =====================[ MOUNTING EXTERNAL HOME ]===================== #
-log_info "Configuring 512 GB drive as /home"
-HOME_UUID="688f55cd-90c1-4766-b4f9-5e1a812fe16a"
-log_info "Cleaning old /home entries from /etc/fstab..."
-sudo sed -i '/[[:space:]]\/home[[:space:]]/d' /etc/fstab
-log_info "Adding correct entry for 512GB drive..."
-echo "UUID=$HOME_UUID /home ext4 defaults 0 2" | sudo tee -a /etc/fstab > /dev/null
-log_info "Reloading systemd and mounting..."
-sudo systemctl daemon-reload
-sudo umount -R /home 2>/dev/null || true
+log_info "Configuring 512 GB drive..."
+UUID="688f55cd-90c1-4766-b4f9-5e1a812fe16a"
+if ! grep -q "$UUID" /etc/fstab; then
+    sudo sed -i '/[[:space:]]\/home[[:space:]]/d' /etc/fstab
+    echo "UUID=$UUID /home ext4 defaults 0 2" | sudo tee -a /etc/fstab > /dev/null
+fi
 sudo mount -a
-log_info "Fixing permissions for user: $USER"
-sudo chown -R "$USER:$(id -gn "$USER")" "/home/$USER"
-sudo chmod 700 "/home/$USER"
-log_ok "512 GB Drive mounted via fstab. Reboot safe."
+if [ "$(stat -c '%U' /home/$USER 2>/dev/null)" != "$USER" ]; then
+    sudo chown -R $USER:$USER /home/$USER
+    sudo chmod 700 /home/$USER
+fi
+log_ok "Home drive ready."
 
 # =====================[ CLEANUP ]===================== #
 log_info "Cleaning up..."
