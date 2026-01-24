@@ -305,7 +305,6 @@ echo -e "${GREEN}========================================${NC}"
 echo ""
 echo "Logs saved to: $LOG_FILE"
 echo ""
-echo "Reboot your system for NVIDIA drivers to load properly."
 
 # todo
 # extensions
