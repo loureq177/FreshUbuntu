@@ -78,6 +78,7 @@ log_info "Configuring GNOME environment..."
 log_info "Applying GNOME preferences..."
 gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark' || log_warn "GTK theme failed"
 gsettings set org.gnome.desktop.interface icon-theme "Adwaita"
+gsettings set org.gnome.desktop.interface accent-color "blue"
 gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' || log_warn "Color scheme failed"
 gsettings set org.gnome.desktop.interface font-name 'Adwaita Sans 12'
 gsettings set org.gnome.desktop.interface document-font-name 'Adwaita Sans 12'
