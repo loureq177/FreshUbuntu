@@ -8,7 +8,11 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 sudo -v
-while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+while true; do
+  sudo -n true
+  sleep 60
+  kill -0 "$$" || exit
+done 2>/dev/null &
 
 # =====================[ COLORS & LOGGING ]===================== #
 RED='\033[0;31m'
@@ -20,10 +24,22 @@ NC='\033[0m' # No Color
 LOG_FILE="/tmp/ubuntu-setup.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
-log_info()  { echo -e "${BLUE}[INFO]${NC}  $*"; sleep 2; }
-log_ok()    { echo -e "${GREEN}[OK]${NC}    $*"; sleep 2; }
-log_warn()  { echo -e "${YELLOW}[WARN]${NC}  $*"; sleep 2; }
-log_error() { echo -e "${RED}[ERROR]${NC} $*"; sleep 2; }
+log_info() {
+  echo -e "${BLUE}[INFO]${NC}  $*"
+  sleep 2
+}
+log_ok() {
+  echo -e "${GREEN}[OK]${NC}    $*"
+  sleep 2
+}
+log_warn() {
+  echo -e "${YELLOW}[WARN]${NC}  $*"
+  sleep 2
+}
+log_error() {
+  echo -e "${RED}[ERROR]${NC} $*"
+  sleep 2
+}
 
 log_info "Running setup for user: $USER"
 log_info "Home directory: $HOME"
@@ -48,7 +64,7 @@ else
 
   log_ok "Git has been correctly set up."
 fi
- 
+
 # =========================[ DRIVER UPDATE ]========================= #
 log_info "Updating drivers..."
 sudo fwupdmgr refresh --force || true
@@ -64,11 +80,11 @@ FONT_DIR="/usr/share/fonts/JetBrainsMonoNerd"
 
 if [ ! -d "$FONT_DIR" ]; then
   sudo mkdir -p "$FONT_DIR"
-  curl -fLo /tmp/JetBrainsMono.zip "$FONT_URL" \
-    && sudo unzip -qo /tmp/JetBrainsMono.zip -d "$FONT_DIR" \
-    && sudo fc-cache -f -v \
-    && log_ok "JetBrains Mono Nerd Font installed." \
-    || log_warn "Failed to install JetBrains Mono Nerd Font."
+  curl -fLo /tmp/JetBrainsMono.zip "$FONT_URL" &&
+    sudo unzip -qo /tmp/JetBrainsMono.zip -d "$FONT_DIR" &&
+    sudo fc-cache -f -v &&
+    log_ok "JetBrains Mono Nerd Font installed." ||
+    log_warn "Failed to install JetBrains Mono Nerd Font."
 else
   log_info "JetBrains Mono Nerd Font already installed — skipping."
 fi
@@ -82,9 +98,9 @@ gsettings set org.gnome.desktop.interface accent-color "blue"
 gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' || log_warn "Color scheme failed"
 gsettings set org.gnome.desktop.interface font-name 'Adwaita Sans 12'
 gsettings set org.gnome.desktop.interface document-font-name 'Adwaita Sans 12'
-gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrainsMono Nerd Font Mono 14' \
-  && log_ok "Default monospace font set to JetBrainsMono Nerd Font Mono." \
-  || log_warn "Failed to set JetBrains Mono Nerd Font as default."
+gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrainsMono Nerd Font Mono 14' &&
+  log_ok "Default monospace font set to JetBrainsMono Nerd Font Mono." ||
+  log_warn "Failed to set JetBrains Mono Nerd Font as default."
 gsettings set org.gnome.desktop.interface text-scaling-factor 1.10
 gsettings set org.gnome.desktop.wm.preferences button-layout 'appmenu:minimize,maximize,close'
 gsettings set org.gnome.desktop.interface show-battery-percentage true
@@ -93,7 +109,7 @@ gsettings set org.gnome.desktop.input-sources xkb-options "['caps:escape']"
 gsettings set org.gnome.desktop.interface clock-format '24h'
 gsettings set org.gnome.desktop.peripherals.keyboard delay 200
 log_ok "GNOME settings applied."
- 
+
 # =====================[ GNOME EXTENSIONS ]===================== #
 gnome-extensions disable ubuntu-dock@ubuntu.com
 gnome-extensions disable ding@rastersoft.com
@@ -131,7 +147,7 @@ sudo add-apt-repository -y ppa:longsleep/golang-backports
 # =====================[ VS CODE ]===================== #
 log_info "Configuring Visual Studio Code repository..."
 sudo rm -f /etc/apt/sources.list.d/vscode.list /etc/apt/keyrings/vscode.gpg
-wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/vscode.gpg > /dev/null
+wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/vscode.gpg >/dev/null
 echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/vscode.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list
 
 # =====================[ UPDATE ]===================== #
@@ -140,9 +156,9 @@ sudo apt update -y
 # =====================[ REMOVE APT PACKAGES ]===================== #
 log_info "Removing unnecessary applications..."
 sudo apt remove -y \
-firefox \
-orca \
-yelp
+  firefox \
+  orca \
+  yelp
 log_ok "Unnecessary applications removed."
 
 # =====================[ UPDATE APT PACKAGES ]===================== #
@@ -181,6 +197,7 @@ sudo apt install -y \
   python3-virtualenv \
   rclone \
   rclone-browser \
+  ripgrep \
   sox \
   stacer \
   stow \
@@ -204,12 +221,12 @@ log_ok "Zen Browser set as default."
 
 # =====================[ INSTALL OLLAMA ]===================== #
 log_info "Checking for Ollama..."
-if command -v ollama &> /dev/null; then
-    log_info "Ollama is already installed — skipping."
+if command -v ollama &>/dev/null; then
+  log_info "Ollama is already installed — skipping."
 else
-    log_info "Ollama not found. Starting installation..."
-    curl -fsSL https://ollama.com/install.sh | sh
-    log_ok "Ollama installed successfully."
+  log_info "Ollama not found. Starting installation..."
+  curl -fsSL https://ollama.com/install.sh | sh
+  log_ok "Ollama installed successfully."
 fi
 
 # =====================[ FLATPAK SETUP ]===================== #
@@ -217,26 +234,25 @@ log_info "Setting up Flatpak repository..."
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 log_ok "Flathub repository ready."
 flatpak_apps=(
-  app.zen_browser.zen \
-  com.discordapp.Discord/x86_64/stable \
-  com.github.PintaProject.Pinta \
-  com.mattjakeman.ExtensionManager \
-  com.prusa3d.PrusaSlicer \
-  com.spotify.Client \
-  com.valvesoftware.Steam \
-  io.dbeaver.DBeaverCommunity \
-  md.obsidian.Obsidian \
-  org.gnome.Snapshot \
+  app.zen_browser.zen
+  com.discordapp.Discord/x86_64/stable
+  com.github.PintaProject.Pinta
+  com.mattjakeman.ExtensionManager
+  com.prusa3d.PrusaSlicer
+  com.spotify.Client
+  com.valvesoftware.Steam
+  io.dbeaver.DBeaverCommunity
+  md.obsidian.Obsidian
+  org.gnome.Snapshot
   org.gnome.Boxes
 )
 log_info "Installing Flatpak applications (batch mode)..."
 flatpak install \
-	-y \
-	--system \
-	flathub "${flatpak_apps[@]}" \
-  && log_ok "All Flatpak applications installed successfully." \
-  || log_warn "There were issues installing some Flatpak applications."
-
+  -y \
+  --system \
+  flathub "${flatpak_apps[@]}" &&
+  log_ok "All Flatpak applications installed successfully." ||
+  log_warn "There were issues installing some Flatpak applications."
 
 # =====================[ ENABLE FIREWALL ]===================== #
 sudo ufw --force enable
@@ -245,21 +261,21 @@ sudo ufw --force enable
 log_info "Fixing Lofree keyboard (Function keys)..."
 sudo modprobe hid_apple
 if [ -d "/sys/module/hid_apple/parameters" ]; then
-    echo 2 | sudo tee /sys/module/hid_apple/parameters/fnmode > /dev/null
-    log_ok "hid_apple module configured."
+  echo 2 | sudo tee /sys/module/hid_apple/parameters/fnmode >/dev/null
+  log_ok "hid_apple module configured."
 else
-    log_warn "hid_apple module not found. Is the keyboard connected?"
+  log_warn "hid_apple module not found. Is the keyboard connected?"
 fi
 sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="hid_apple.fnmode=2 /' /etc/default/grub
 sudo update-grub
 
 # =====================[ UV INSTALLER ]===================== #
 log_info "Installing uv for Python..."
-if command -v uv &> /dev/null; then
-    log_info "uv already installed — skipping."
+if command -v uv &>/dev/null; then
+  log_info "uv already installed — skipping."
 else
-    log_info "Installing uv..."
-    curl -LsSf https://astral.sh/uv/install.sh | sh
+  log_info "Installing uv..."
+  curl -LsSf https://astral.sh/uv/install.sh | sh
 fi
 
 # =====================[ STARSHIP PROMPT ]===================== #
@@ -273,8 +289,8 @@ else
 fi
 STARSHIP_INIT='eval "$(starship init zsh)"'
 if ! grep -qF "$STARSHIP_INIT" "$HOME/.zshrc"; then
-  echo "" >> "$HOME/.zshrc"
-  echo "$STARSHIP_INIT" >> "$HOME/.zshrc"
+  echo "" >>"$HOME/.zshrc"
+  echo "$STARSHIP_INIT" >>"$HOME/.zshrc"
   log_ok "Added Starship init to .zshrc"
 else
   log_info "Starship already configured in .zshrc — skipping."
@@ -283,23 +299,23 @@ fi
 # =====================[ SET ZSH AS DEFAULT ]===================== #
 log_info "Setting ZSH as default shell..."
 if [ "$SHELL" != "$(which zsh)" ]; then
-    sudo chsh -s "$(which zsh)" "$USER"
-    log_ok "Shell changed to ZSH. It will take effect after logout/login."
+  sudo chsh -s "$(which zsh)" "$USER"
+  log_ok "Shell changed to ZSH. It will take effect after logout/login."
 else
-    log_info "ZSH is already your default shell."
+  log_info "ZSH is already your default shell."
 fi
 
 # =====================[ MOUNTING EXTERNAL HOME ]===================== #
 log_info "Configuring 512 GB drive..."
 UUID="688f55cd-90c1-4766-b4f9-5e1a812fe16a"
 if ! grep -q "$UUID" /etc/fstab; then
-    sudo sed -i '/[[:space:]]\/home[[:space:]]/d' /etc/fstab
-    echo "UUID=$UUID /home ext4 defaults 0 2" | sudo tee -a /etc/fstab > /dev/null
+  sudo sed -i '/[[:space:]]\/home[[:space:]]/d' /etc/fstab
+  echo "UUID=$UUID /home ext4 defaults 0 2" | sudo tee -a /etc/fstab >/dev/null
 fi
 sudo mount -a
 if [ "$(stat -c '%U' /home/$USER 2>/dev/null)" != "$USER" ]; then
-    sudo chown -R $USER:$USER /home/$USER
-    sudo chmod 700 /home/$USER
+  sudo chown -R $USER:$USER /home/$USER
+  sudo chmod 700 /home/$USER
 fi
 log_ok "Home drive ready."
 
