@@ -108,6 +108,7 @@ gsettings set org.gnome.desktop.wm.preferences auto-raise true
 gsettings set org.gnome.desktop.input-sources xkb-options "['caps:escape']"
 gsettings set org.gnome.desktop.interface clock-format '24h'
 gsettings set org.gnome.desktop.peripherals.keyboard delay 200
+gsettings set org.gnome.settings-daemon.plugins.media-keys volume-step 2
 log_ok "GNOME settings applied."
 
 # =====================[ GNOME EXTENSIONS ]===================== #
